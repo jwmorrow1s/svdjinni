@@ -9,8 +9,7 @@ run: $(PROJ)
 
 $(PROJ): build
 	ros build $(PROJ).ros
-# TODO not quite right yet
-# TODO update README as project template for lisp shit
+
 build:
 	@echo '#!/bin/sh' > $(PROJ).ros
 	@echo '#|-*- mode:lisp -*-|#' >> $(PROJ).ros
