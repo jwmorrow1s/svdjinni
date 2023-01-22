@@ -26,3 +26,6 @@ endif
 ifneq (,$(wildcard $(PROJ)))
 	@rm $(PROJ)
 endif
+ifneq (,$(wildcard *.svg))
+	@rm *.svg
+endif
