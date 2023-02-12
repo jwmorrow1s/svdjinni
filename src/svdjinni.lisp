@@ -2,7 +2,6 @@
 (defconstant +svg-footer-tag+ "</svg>")
 
 ;;; types
-;
 (declaim (ftype (function (t) boolean) ->boolean))
 (defun ->boolean (thing)
   (not (not thing)))
@@ -58,20 +57,36 @@
      (x 0 :type fixnum)
      (y 0 :type fixnum))
 
-;;; @todo - finish cubic-bezier-p
-;(declaim (ftype (function (string) boolean) cubic-bezier-p))
-;(defun cubic-bezier-p (maybe-bezier)
-;  ; minimum possible bezier expression C 0 0 0 0 0 0 is 13 chars long
-;  (and (>= (length maybe-bezier) 13)
-;       (or (eq #\C) (eq #\c) (elt maybe-bezier 0))))
+(declaim (ftype (function (string) boolean ) string%intp))
+(defun string%intp (str)
+  (if (and (eq #\0 (elt str 0))
+           (> (length str) 1))
+      nil
+  ;else
+  (let ((zero-char (char-code #\0))
+        (nine-char (char-code #\9))
+        (is-string-of-int? t))
+      (loop for ch across str
+            do (when (not (and (>= (char-code ch) zero-char)
+                               (<= (char-code ch) nine-char)))
+                 (setf is-string-of-int? nil))) is-string-of-int?)))
 
-; (deftype cubic-bezier-type ()
-;   "a type of a valid bezier command"
-;   '(and (satisfies stringp)
-;         (satisfies cubic-bezier-p)))
+(declaim (ftype (function (string) boolean) cubic-bezier-p))
+(defun cubic-bezier-p (maybe-bezier)
+  ; minimum possible bezier expression C 0 0 0 0 0 0 is 13 chars long
+  (and (>= (length maybe-bezier) 13)
+       (or (eq #\C (elt maybe-bezier 0)) (eq #\c (elt maybe-bezier 0)))
+       (let ((points (subseq (split maybe-bezier) 1)))
+         ; 3 pairs of points (control1, control2, terminus)
+         (and (eq (length points) 6))
+              (every #'(lambda (substr) (string%intp substr)) (subseq (split maybe-bezier) 1)))))
 
-;;; @todo replace string return type with cubic-bezier-type when complete
-(declaim (ftype (function (point point point &key (:type position-type)) string) cubic-bezier))
+(deftype cubic-bezier-type ()
+  "a type of a valid bezier command"
+  '(and (satisfies stringp)
+        (satisfies cubic-bezier-p)))
+
+(declaim (ftype (function (point point point &key (:type position-type)) cubic-bezier-type) cubic-bezier))
 (defun cubic-bezier (control1 control2 terminus &optional &key (type :absolute))
   "creates a cubic-bezier instruction for a path"
   (let ((effective-position-char (if (eq :absolute type) #\C #\c)))
